@@ -4,6 +4,10 @@
 
 ## Usage
 
+```
+tw tweet [TEXT...]
+```
+
 ## Install
 
 To install, use `go get`:

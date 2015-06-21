@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -95,6 +96,21 @@ func assert(err error) {
 }
 
 func doTweet(c *cli.Context) {
+	api := doOauth()
+	var text string
+	for i := 0; i < len(c.Args()); i++ {
+		text += c.Args()[i]
+		if i == len(c.Args())-1 {
+			continue
+		}
+		text += " "
+	}
+	tweet, err := api.PostTweet(text, nil)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Println("Tweeted : ", tweet.Text)
+	}
 }
 
 func doRt(c *cli.Context) {
