@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/codegangsta/cli"
 )
@@ -37,7 +38,7 @@ var commandRt = cli.Command{
 
 var commandFav = cli.Command{
 	Name:  "fav",
-	Usage: "",
+	Usage: "tw fav [TWEET_ID]",
 	Description: `
 `,
 	Action: doFav,
@@ -117,6 +118,16 @@ func doRt(c *cli.Context) {
 }
 
 func doFav(c *cli.Context) {
+	api := doOauth()
+
+	for i := 0; i < len(c.Args()); i++ {
+		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+		_, err := api.Favorite(tweetID)
+		if err != nil {
+			log.Fatal(err)
+			break
+		}
+	}
 }
 
 func doDel(c *cli.Context) {
