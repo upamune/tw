@@ -1,19 +1,30 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/mitchellh/go-homedir"
 	"github.com/mrjones/oauth"
 	"github.com/skratchdot/open-golang/open"
 )
 
-func doOauth() (twitterApi *anaconda.TwitterApi) {
-	var consumerKey string = "oaFjoL9zSCPdNKIfCfae4iRGf"
+type AccessToken struct {
+	Token  string `toml:"token"`
+	Secret string `toml:"secret"`
+}
 
-	var consumerSecret string = "R016AC6zTohQtWU0ynUbyjdkNEcJHzTGNclRXmFiDzBtSgZEyj"
+func isFileExists(fileName string) bool {
+	_, err := os.Stat(fileName)
+	return err == nil
+}
 
+func getAccessToken(consumerKey, consumerSecret string) (a AccessToken, err error) {
 	c := oauth.NewConsumer(
 		consumerKey,
 		consumerSecret,
@@ -40,13 +51,57 @@ func doOauth() (twitterApi *anaconda.TwitterApi) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	accessToken := authToken.Token
-	accessTokenSecret := authToken.Secret
+	a.Token = authToken.Token
+	a.Secret = authToken.Secret
+
+	err = saveAccessToken(a)
+
+	return
+}
+
+func saveAccessToken(a AccessToken) (err error) {
+	var buffer bytes.Buffer
+	encoder := toml.NewEncoder(&buffer)
+	err = encoder.Encode(a)
+	if err != nil {
+		return err
+	}
+	home, _ := homedir.Dir()
+	saveFilePath := home + "/.tw.toml"
+	err = ioutil.WriteFile(saveFilePath, buffer.Bytes(), 0664)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func loadAccessToken() (a AccessToken, err error) {
+	home, _ := homedir.Dir()
+	filePath := home + "/.tw.toml"
+	_, err = toml.DecodeFile(filePath, &a)
+
+	return
+
+}
+
+func doOauth() (twitterApi *anaconda.TwitterApi) {
+	consumerKey := "oaFjoL9zSCPdNKIfCfae4iRGf"
+	consumerSecret := "R016AC6zTohQtWU0ynUbyjdkNEcJHzTGNclRXmFiDzBtSgZEyj"
+	var accessToken AccessToken
+	home, _ := homedir.Dir()
+	filePath := home + "/.tw.toml"
+
+	if isFileExists(filePath) {
+		accessToken, _ = loadAccessToken()
+	} else {
+		accessToken, _ = getAccessToken(consumerKey, consumerSecret)
+	}
 
 	anaconda.SetConsumerKey(consumerKey)
 	anaconda.SetConsumerSecret(consumerSecret)
 
-	twitterApi = anaconda.NewTwitterApi(accessToken, accessTokenSecret)
+	twitterApi = anaconda.NewTwitterApi(accessToken.Token, accessToken.Secret)
 
 	return
 }
