@@ -1,10 +1,11 @@
-## 0.1.0 (2014-08-18)
+## 0.2.0 (2015-07-19)
 
-Initial release
+アクセストークンを保存してロードするようにした
 
 ### Added
 
-- Add Fundamental features
+- save access token
+- load access token
 
 ### Deprecated
 
