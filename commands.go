@@ -146,4 +146,13 @@ func doDm(c *cli.Context) {
 }
 
 func doReply(c *cli.Context) {
+	api := doOauth()
+	mentions, err := api.GetMentionsTimeline(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, mention := range mentions {
+		fmt.Println(mention.Text)
+	}
 }
