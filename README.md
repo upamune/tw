@@ -6,6 +6,8 @@
 
 ```
 tw tweet [TEXT...]
+tw reply
+tw help
 ```
 
 ## Install
