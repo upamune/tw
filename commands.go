@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/codegangsta/cli"
+	"github.com/mgutz/ansi"
 )
 
 var Commands = []cli.Command{
@@ -146,4 +147,18 @@ func doDm(c *cli.Context) {
 }
 
 func doReply(c *cli.Context) {
+	api := doOauth()
+	defer api.Close()
+	mentions, err := api.GetMentionsTimeline(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, mention := range mentions {
+		red := ansi.ColorCode("red")
+		reset := ansi.ColorCode("reset")
+		fromUser := mention.User
+		from := fromUser.Name + "(" + fromUser.ScreenName + ")"
+		fmt.Println(red, from, reset, ":", mention.Text)
+	}
 }
