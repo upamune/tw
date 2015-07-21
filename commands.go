@@ -106,6 +106,9 @@ func doTweet(c *cli.Context) {
 		}
 		text += " "
 	}
+	if text == "" {
+		log.Fatal("ツイートする文字列を指定してください")
+	}
 	tweet, err := api.PostTweet(text, nil)
 	if err != nil {
 		log.Fatal(err)
