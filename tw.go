@@ -13,6 +13,7 @@ func main() {
 	app.Usage = ""
 	app.Author = "upamune"
 	app.Email = "jajkeqos@gmail.com"
+	app.Action = commandTweet.Action
 	app.Commands = Commands
 
 	app.Run(os.Args)
