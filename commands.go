@@ -23,7 +23,7 @@ var Commands = []cli.Command{
 
 var commandTweet = cli.Command{
 	Name:  "tweet",
-	Usage: "",
+	Usage: "tw [tweet] TEXT...",
 	Description: `
 `,
 	Action: doTweet,
@@ -39,7 +39,7 @@ var commandRt = cli.Command{
 
 var commandFav = cli.Command{
 	Name:  "fav",
-	Usage: "tw fav [TWEET_ID]",
+	Usage: "tw fav TWEET_ID",
 	Description: `
 `,
 	Action: doFav,
@@ -63,7 +63,7 @@ var commandSearch = cli.Command{
 
 var commandTimeline = cli.Command{
 	Name:  "timeline",
-	Usage: "",
+	Usage: "tw timeline [NUM]",
 	Description: `
 `,
 	Action: doTimeline,
@@ -141,6 +141,24 @@ func doSearch(c *cli.Context) {
 }
 
 func doTimeline(c *cli.Context) {
+	api := doOauth()
+	defer api.Close()
+	timeline, err := api.GetHomeTimeline(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, tweet := range timeline {
+		user := tweet.User.Name
+		screenName := tweet.User.ScreenName
+		user += "(@" + screenName + ")"
+
+		blue := ansi.ColorCode("blue")
+		reset := ansi.ColorCode("reset")
+
+		fmt.Println(blue, user, ":", reset, tweet.Text)
+	}
+
 }
 
 func doDm(c *cli.Context) {
