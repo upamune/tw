@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strconv"
 
@@ -144,7 +145,19 @@ func doSearch(c *cli.Context) {
 func doTimeline(c *cli.Context) {
 	api := doOauth()
 	defer api.Close()
-	timeline, err := api.GetHomeTimeline(nil)
+
+	var cnt string
+	if len(c.Args()) > 0 {
+		_, err := strconv.Atoi(c.Args()[0])
+		if err != nil {
+			panic(err)
+		}
+		cnt = c.Args()[0]
+	}
+
+	v := url.Values{}
+	v.Add("count", cnt)
+	timeline, err := api.GetHomeTimeline(v)
 	if err != nil {
 		panic(err)
 	}
