@@ -101,6 +101,8 @@ func assert(err error) {
 
 func doTweet(c *cli.Context) {
 	api := doOauth()
+	defer api.Close()
+
 	var text string
 	for i := 0; i < len(c.Args()); i++ {
 		text += c.Args()[i]
@@ -125,6 +127,7 @@ func doRt(c *cli.Context) {
 
 func doFav(c *cli.Context) {
 	api := doOauth()
+	defer api.Close()
 
 	for i := 0; i < len(c.Args()); i++ {
 		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
