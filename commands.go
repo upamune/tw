@@ -62,8 +62,9 @@ var commandSearch = cli.Command{
 }
 
 var commandTimeline = cli.Command{
-	Name:  "timeline",
-	Usage: "tw timeline [NUM]",
+	Name:    "timeline",
+	Aliases: []string{"tl"},
+	Usage:   "tw timeline [NUM]",
 	Description: `
 `,
 	Action: doTimeline,
