@@ -48,7 +48,7 @@ var commandFav = cli.Command{
 
 var commandDel = cli.Command{
 	Name:  "del",
-	Usage: "",
+	Usage: "tw del TWEET_ID",
 	Description: `
 `,
 	Action: doDel,
@@ -152,6 +152,18 @@ func doFav(c *cli.Context) {
 }
 
 func doDel(c *cli.Context) {
+	api := doOauth()
+	defer api.Close()
+
+	for i := 0; i < len(c.Args()); i++ {
+		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+		tweet, err := api.DeleteTweet(tweetID, true)
+		if err != nil {
+			log.Fatal(err)
+			break
+		}
+		fmt.Println("Del:", tweet.Text)
+	}
 }
 
 func doSearch(c *cli.Context) {
@@ -185,7 +197,7 @@ func doTimeline(c *cli.Context) {
 		blue := ansi.ColorCode("blue")
 		reset := ansi.ColorCode("reset")
 
-		fmt.Println(blue, user, ":", reset, tweet.Text)
+		fmt.Println(blue, user, ":", reset, tweet.Text, tweet.Id)
 	}
 
 }
