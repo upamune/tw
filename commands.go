@@ -32,7 +32,7 @@ var commandTweet = cli.Command{
 
 var commandRt = cli.Command{
 	Name:  "rt",
-	Usage: "",
+	Usage: "tw rt TWEET_ID",
 	Description: `
 `,
 	Action: doRt,
@@ -123,6 +123,18 @@ func doTweet(c *cli.Context) {
 }
 
 func doRt(c *cli.Context) {
+	api := doOauth()
+	defer api.Close()
+
+	for i := 0; i < len(c.Args()); i++ {
+		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+		tweet, err := api.Retweet(tweetID, true)
+		if err != nil {
+			log.Fatal(err)
+			break
+		}
+		fmt.Println(tweet.Text)
+	}
 }
 
 func doFav(c *cli.Context) {
