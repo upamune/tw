@@ -73,7 +73,7 @@ var commandTimeline = cli.Command{
 
 var commandDm = cli.Command{
 	Name:  "dm",
-	Usage: "",
+	Usage: "tw dm [TEXT...]",
 	Description: `
 `,
 	Action: doDm,
@@ -179,6 +179,30 @@ func doTimeline(c *cli.Context) {
 }
 
 func doDm(c *cli.Context) {
+	api := doOauth()
+	defer api.Close()
+
+	screenName := c.Args()[0]
+	var message string
+	for i := 1; i < len(c.Args()); i++ {
+		message += c.Args()[i]
+		if i == len(c.Args())-1 {
+			continue
+		}
+		message += " "
+	}
+	if message == "" {
+		log.Fatal("DMする文字列を指定してください")
+	}
+	dm, err := api.PostDMToScreenName(message, screenName)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		red := ansi.ColorCode("red")
+		reset := ansi.ColorCode("reset")
+		fmt.Println("TO:", red, screenName, reset, dm.Text)
+	}
+
 }
 
 func doReply(c *cli.Context) {
