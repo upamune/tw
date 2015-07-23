@@ -56,7 +56,7 @@ var commandDel = cli.Command{
 
 var commandSearch = cli.Command{
 	Name:  "search",
-	Usage: "",
+	Usage: "tw serach [QUERY]",
 	Description: `
 `,
 	Action: doSearch,
@@ -167,6 +167,35 @@ func doDel(c *cli.Context) {
 }
 
 func doSearch(c *cli.Context) {
+	api := doOauth()
+	defer api.Close()
+	var query string
+	for i := 0; i < len(c.Args()); i++ {
+		query += c.Args()[i]
+		if i == len(c.Args())-1 {
+			continue
+		}
+		query += " "
+	}
+	if query == "" {
+		log.Fatal("ツイートする文字列を指定してください")
+	}
+	searchRes, err := api.GetSearch(query, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tweets := searchRes.Statuses
+
+	for _, tweet := range tweets {
+		user := tweet.User.Name
+		screenName := tweet.User.ScreenName
+		user += "(@" + screenName + ")"
+
+		blue := ansi.ColorCode("blue")
+		reset := ansi.ColorCode("reset")
+
+		fmt.Println(blue, user, ":", reset, tweet.Text, tweet.Id)
+	}
 }
 
 func doTimeline(c *cli.Context) {

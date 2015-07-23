@@ -10,6 +10,7 @@ tw reply
 tw rt [TWEET_ID]
 tw dm [TEXT...]
 tw del [TWEET_ID]
+tw search [QUERY]
 tw help
 ```
 
