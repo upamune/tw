@@ -7,6 +7,7 @@
 ```
 tw tweet [TEXT...]
 tw reply
+tw dm [TEXT...]
 tw help
 ```
 
