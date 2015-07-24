@@ -226,7 +226,7 @@ func doTimeline(c *cli.Context) {
 		blue := ansi.ColorCode("blue")
 		reset := ansi.ColorCode("reset")
 
-		fmt.Println(blue, user, ":", reset, tweet.Text, tweet.Id)
+		fmt.Println(blue, user, ":", reset, tweet.Text)
 	}
 
 }
