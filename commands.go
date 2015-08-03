@@ -42,6 +42,13 @@ var commandTweet = cli.Command{
 var commandRt = cli.Command{
 	Name:  "rt",
 	Usage: "tw rt TWEET_ID",
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_PIPE",
+			Name:   "pipe",
+			Usage:  "Retweet tweet by stdin",
+		},
+	},
 	Description: `
 	`,
 	Action: doRt,
@@ -88,7 +95,7 @@ var commandTimeline = cli.Command{
 			Usage:  "Show timeline with Tweet ID",
 		},
 	},
-	Usage:   "tw timeline [NUM]",
+	Usage: "tw timeline [NUM]",
 	Description: `
 	`,
 	Action: doTimeline,
@@ -159,15 +166,43 @@ func doTweet(c *cli.Context) {
 func doRt(c *cli.Context) {
 	api := doOauth()
 	defer api.Close()
+	if c.Bool("pipe") {
+		var stdin string
 
-	for i := 0; i < len(c.Args()); i++ {
-		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
-		tweet, err := api.Retweet(tweetID, true)
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			stdin += scanner.Text()
+		}
+		tweetID, _ := strconv.ParseInt(stdin, 10, 64)
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
+		_, err := api.Retweet(tweetID, true)
 		if err != nil {
 			log.Fatal(err)
-			break
 		}
-		fmt.Println(tweet.Text)
+		tweet, err := api.GetTweet(tweetID, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		user := tweet.User.Name
+		screenName := tweet.User.ScreenName
+		user += "(@" + screenName + ")"
+		fmt.Println("Retweeted: ", user, tweet.Text)
+	} else {
+
+		for i := 0; i < len(c.Args()); i++ {
+			tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+			tweet, err := api.Retweet(tweetID, true)
+			if err != nil {
+				log.Fatal(err)
+				break
+			}
+			user := tweet.User.Name
+			screenName := tweet.User.ScreenName
+			user += "(@" + screenName + ")"
+			fmt.Println("Retweeted: ", user, tweet.Text)
+		}
 	}
 }
 
@@ -190,15 +225,15 @@ func doFav(c *cli.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		tweet, err := api.GetTweet(tweetID,nil)
+		tweet, err := api.GetTweet(tweetID, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
 		user := tweet.User.Name
 		screenName := tweet.User.ScreenName
 		user += "(@" + screenName + ")"
-		fmt.Println("Favorited: ", user , tweet.Text)
-	}else {
+		fmt.Println("Favorited: ", user, tweet.Text)
+	} else {
 		for i := 0; i < len(c.Args()); i++ {
 			tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
 			_, err := api.Favorite(tweetID)
@@ -206,14 +241,14 @@ func doFav(c *cli.Context) {
 				log.Fatal(err)
 				break
 			}
-			tweet, err := api.GetTweet(tweetID,nil)
+			tweet, err := api.GetTweet(tweetID, nil)
 			if err != nil {
 				log.Fatal(err)
 			}
 			user := tweet.User.Name
 			screenName := tweet.User.ScreenName
 			user += "(@" + screenName + ")"
-			fmt.Println("Favorited: ", user , tweet.Text)
+			fmt.Println("Favorited: ", user, tweet.Text)
 		}
 	}
 }
@@ -285,7 +320,6 @@ func doTimeline(c *cli.Context) {
 		panic(err)
 	}
 
-
 	for _, tweet := range timeline {
 		user := tweet.User.Name
 		screenName := tweet.User.ScreenName
@@ -296,7 +330,7 @@ func doTimeline(c *cli.Context) {
 
 		if c.Bool("with-id") {
 			fmt.Println(blue, user, ":", reset, tweet.Text, tweet.IdStr)
-		}else{
+		} else {
 			fmt.Println(blue, user, ":", reset, tweet.Text)
 		}
 	}
