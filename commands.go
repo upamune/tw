@@ -50,6 +50,13 @@ var commandRt = cli.Command{
 var commandFav = cli.Command{
 	Name:  "fav",
 	Usage: "tw fav TWEET_ID",
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_PIPE",
+			Name:   "pipe",
+			Usage:  "Favorite tweet by stdin",
+		},
+	},
 	Description: `
 	`,
 	Action: doFav,
@@ -74,6 +81,13 @@ var commandSearch = cli.Command{
 var commandTimeline = cli.Command{
 	Name:    "timeline",
 	Aliases: []string{"tl"},
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_WITH",
+			Name:   "with-id",
+			Usage:  "Show timeline with Tweet ID",
+		},
+	},
 	Usage:   "tw timeline [NUM]",
 	Description: `
 	`,
@@ -161,12 +175,45 @@ func doFav(c *cli.Context) {
 	api := doOauth()
 	defer api.Close()
 
-	for i := 0; i < len(c.Args()); i++ {
-		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+	if c.Bool("pipe") {
+		var stdin string
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			stdin += scanner.Text()
+		}
+		tweetID, _ := strconv.ParseInt(stdin, 10, 64)
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
 		_, err := api.Favorite(tweetID)
 		if err != nil {
 			log.Fatal(err)
-			break
+		}
+		tweet, err := api.GetTweet(tweetID,nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		user := tweet.User.Name
+		screenName := tweet.User.ScreenName
+		user += "(@" + screenName + ")"
+		fmt.Println("Favorited: ", user , tweet.Text)
+	}else {
+		for i := 0; i < len(c.Args()); i++ {
+			tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+			_, err := api.Favorite(tweetID)
+			if err != nil {
+				log.Fatal(err)
+				break
+			}
+			tweet, err := api.GetTweet(tweetID,nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+			user := tweet.User.Name
+			screenName := tweet.User.ScreenName
+			user += "(@" + screenName + ")"
+			fmt.Println("Favorited: ", user , tweet.Text)
 		}
 	}
 }
@@ -238,6 +285,7 @@ func doTimeline(c *cli.Context) {
 		panic(err)
 	}
 
+
 	for _, tweet := range timeline {
 		user := tweet.User.Name
 		screenName := tweet.User.ScreenName
@@ -246,7 +294,11 @@ func doTimeline(c *cli.Context) {
 		blue := ansi.ColorCode("blue")
 		reset := ansi.ColorCode("reset")
 
-		fmt.Println(blue, user, ":", reset, tweet.Text)
+		if c.Bool("with-id") {
+			fmt.Println(blue, user, ":", reset, tweet.Text, tweet.IdStr)
+		}else{
+			fmt.Println(blue, user, ":", reset, tweet.Text)
+		}
 	}
 
 }
