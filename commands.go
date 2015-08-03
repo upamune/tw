@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net/url"
@@ -15,7 +16,7 @@ var GlobalFlags = []cli.Flag{
 	cli.BoolFlag{
 		EnvVar: "ENV_PIPE",
 		Name:   "pipe",
-		Usage:  "Change stdin",
+		Usage:  "Tweet by stdin",
 	},
 }
 
@@ -34,7 +35,7 @@ var commandTweet = cli.Command{
 	Name:  "tweet",
 	Usage: "tw [tweet] TEXT...",
 	Description: `
-`,
+	`,
 	Action: doTweet,
 }
 
@@ -42,7 +43,7 @@ var commandRt = cli.Command{
 	Name:  "rt",
 	Usage: "tw rt TWEET_ID",
 	Description: `
-`,
+	`,
 	Action: doRt,
 }
 
@@ -50,7 +51,7 @@ var commandFav = cli.Command{
 	Name:  "fav",
 	Usage: "tw fav TWEET_ID",
 	Description: `
-`,
+	`,
 	Action: doFav,
 }
 
@@ -58,15 +59,15 @@ var commandDel = cli.Command{
 	Name:  "del",
 	Usage: "tw del TWEET_ID",
 	Description: `
-`,
+	`,
 	Action: doDel,
 }
 
 var commandSearch = cli.Command{
 	Name:  "search",
-	Usage: "tw serach [QUERY]",
+	Usage: "tw serach QUERY",
 	Description: `
-`,
+	`,
 	Action: doSearch,
 }
 
@@ -75,7 +76,7 @@ var commandTimeline = cli.Command{
 	Aliases: []string{"tl"},
 	Usage:   "tw timeline [NUM]",
 	Description: `
-`,
+	`,
 	Action: doTimeline,
 }
 
@@ -83,7 +84,7 @@ var commandDm = cli.Command{
 	Name:  "dm",
 	Usage: "tw dm [TEXT...]",
 	Description: `
-`,
+	`,
 	Action: doDm,
 }
 
@@ -91,7 +92,7 @@ var commandReply = cli.Command{
 	Name:  "reply",
 	Usage: "",
 	Description: `
-`,
+	`,
 	Action: doReply,
 }
 
@@ -108,19 +109,27 @@ func assert(err error) {
 }
 
 func doTweet(c *cli.Context) {
-	if c.Bool("pipe") {
-	}
 
 	api := doOauth()
 	defer api.Close()
 
 	var text string
-	for i := 0; i < len(c.Args()); i++ {
-		text += c.Args()[i]
-		if i == len(c.Args())-1 {
-			continue
+	if c.Bool("pipe") {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			text += scanner.Text()
 		}
-		text += " "
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
+	} else {
+		for i := 0; i < len(c.Args()); i++ {
+			text += c.Args()[i]
+			if i == len(c.Args())-1 {
+				continue
+			}
+			text += " "
+		}
 	}
 	if text == "" {
 		log.Fatal("ツイートする文字列を指定してください")
