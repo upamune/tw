@@ -13,6 +13,8 @@ func main() {
 	app.Usage = ""
 	app.Author = "upamune"
 	app.Email = "jajkeqos@gmail.com"
+
+	app.Flags = GlobalFlags
 	app.Action = commandTweet.Action
 	app.Commands = Commands
 

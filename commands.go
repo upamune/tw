@@ -11,6 +11,14 @@ import (
 	"github.com/mgutz/ansi"
 )
 
+var GlobalFlags = []cli.Flag{
+	cli.BoolFlag{
+		EnvVar: "ENV_PIPE",
+		Name:   "pipe",
+		Usage:  "Change stdin",
+	},
+}
+
 var Commands = []cli.Command{
 	commandTweet,
 	commandRt,
@@ -100,6 +108,9 @@ func assert(err error) {
 }
 
 func doTweet(c *cli.Context) {
+	if c.Bool("pipe") {
+	}
+
 	api := doOauth()
 	defer api.Close()
 
