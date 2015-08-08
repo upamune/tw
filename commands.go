@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ChimeraCoder/anaconda"
 	"github.com/codegangsta/cli"
 	"github.com/mgutz/ansi"
 )
@@ -93,6 +94,10 @@ var commandTimeline = cli.Command{
 			Name:   "with-id",
 			Usage:  "Show timeline with Tweet ID",
 		},
+		cli.StringFlag{
+			Name:  "user",
+			Usage: "Show timeline with screen name",
+		},
 	},
 	Usage: "tw timeline [NUM]",
 	Description: `
@@ -110,7 +115,7 @@ var commandDm = cli.Command{
 
 var commandReply = cli.Command{
 	Name:  "reply",
-	Usage: "",
+	Usage: "tw reply",
 	Description: `
 	`,
 	Action: doReply,
@@ -314,9 +319,19 @@ func doTimeline(c *cli.Context) {
 
 	v := url.Values{}
 	v.Add("count", cnt)
-	timeline, err := api.GetHomeTimeline(v)
-	if err != nil {
-		panic(err)
+
+	var timeline []anaconda.Tweet
+
+	if screenName := c.String("user"); len(screenName) > 0 {
+		v.Add("screen_name", screenName)
+		var err error
+		timeline, err = api.GetUserTimeline(v)
+		if err != nil {
+			panic(err)
+		}
+
+	} else {
+		timeline, _ = api.GetHomeTimeline(v)
 	}
 
 	for _, tweet := range timeline {
