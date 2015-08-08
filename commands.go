@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ChimeraCoder/anaconda"
 	"github.com/codegangsta/cli"
 	"github.com/mgutz/ansi"
 )
@@ -71,6 +72,13 @@ var commandFav = cli.Command{
 var commandDel = cli.Command{
 	Name:  "del",
 	Usage: "tw del TWEET_ID",
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_PIPE",
+			Name:   "pipe",
+			Usage:  "Favorite tweet by stdin",
+		},
+	},
 	Description: `
 	`,
 	Action: doDel,
@@ -93,6 +101,10 @@ var commandTimeline = cli.Command{
 			Name:   "with-id",
 			Usage:  "Show timeline with Tweet ID",
 		},
+		cli.StringFlag{
+			Name:  "user",
+			Usage: "Show timeline with screen name",
+		},
 	},
 	Usage: "tw timeline [NUM]",
 	Description: `
@@ -110,7 +122,7 @@ var commandDm = cli.Command{
 
 var commandReply = cli.Command{
 	Name:  "reply",
-	Usage: "",
+	Usage: "tw reply",
 	Description: `
 	`,
 	Action: doReply,
@@ -256,14 +268,33 @@ func doDel(c *cli.Context) {
 	api := doOauth()
 	defer api.Close()
 
-	for i := 0; i < len(c.Args()); i++ {
-		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+	if c.Bool("pipe") {
+		var stdin string
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			stdin += scanner.Text()
+		}
+		tweetID, _ := strconv.ParseInt(stdin, 10, 64)
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
 		tweet, err := api.DeleteTweet(tweetID, true)
 		if err != nil {
 			log.Fatal(err)
-			break
 		}
-		fmt.Println("Del:", tweet.Text)
+		fmt.Println("Deleted: ", tweet.Text)
+	} else {
+
+		for i := 0; i < len(c.Args()); i++ {
+			tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+			tweet, err := api.DeleteTweet(tweetID, true)
+			if err != nil {
+				log.Fatal(err)
+				break
+			}
+			fmt.Println("Deleted: ", tweet.Text)
+		}
 	}
 }
 
@@ -314,9 +345,19 @@ func doTimeline(c *cli.Context) {
 
 	v := url.Values{}
 	v.Add("count", cnt)
-	timeline, err := api.GetHomeTimeline(v)
-	if err != nil {
-		panic(err)
+
+	var timeline []anaconda.Tweet
+
+	if screenName := c.String("user"); len(screenName) > 0 {
+		v.Add("screen_name", screenName)
+		var err error
+		timeline, err = api.GetUserTimeline(v)
+		if err != nil {
+			panic(err)
+		}
+
+	} else {
+		timeline, _ = api.GetHomeTimeline(v)
 	}
 
 	for _, tweet := range timeline {
