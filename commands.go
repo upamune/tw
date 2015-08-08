@@ -12,14 +12,6 @@ import (
 	"github.com/mgutz/ansi"
 )
 
-var GlobalFlags = []cli.Flag{
-	cli.BoolFlag{
-		EnvVar: "ENV_PIPE",
-		Name:   "pipe",
-		Usage:  "Tweet by stdin",
-	},
-}
-
 var Commands = []cli.Command{
 	commandTweet,
 	commandRt,
@@ -34,6 +26,13 @@ var Commands = []cli.Command{
 var commandTweet = cli.Command{
 	Name:  "tweet",
 	Usage: "tw [tweet] TEXT...",
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_PIPE",
+			Name:   "pipe",
+			Usage:  "Tweet by stdin",
+		},
+	},
 	Description: `
 	`,
 	Action: doTweet,
