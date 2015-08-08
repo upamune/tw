@@ -72,6 +72,13 @@ var commandFav = cli.Command{
 var commandDel = cli.Command{
 	Name:  "del",
 	Usage: "tw del TWEET_ID",
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_PIPE",
+			Name:   "pipe",
+			Usage:  "Favorite tweet by stdin",
+		},
+	},
 	Description: `
 	`,
 	Action: doDel,
@@ -261,14 +268,33 @@ func doDel(c *cli.Context) {
 	api := doOauth()
 	defer api.Close()
 
-	for i := 0; i < len(c.Args()); i++ {
-		tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+	if c.Bool("pipe") {
+		var stdin string
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			stdin += scanner.Text()
+		}
+		tweetID, _ := strconv.ParseInt(stdin, 10, 64)
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
 		tweet, err := api.DeleteTweet(tweetID, true)
 		if err != nil {
 			log.Fatal(err)
-			break
 		}
-		fmt.Println("Del:", tweet.Text)
+		fmt.Println("Deleted: ", tweet.Text)
+	} else {
+
+		for i := 0; i < len(c.Args()); i++ {
+			tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
+			tweet, err := api.DeleteTweet(tweetID, true)
+			if err != nil {
+				log.Fatal(err)
+				break
+			}
+			fmt.Println("Deleted: ", tweet.Text)
+		}
 	}
 }
 
