@@ -13,7 +13,13 @@ func main() {
 	app.Usage = ""
 	app.Author = "upamune"
 	app.Email = "jajkeqos@gmail.com"
-	app.Flags = GlobalFlags
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			EnvVar: "ENV_PIPE",
+			Name:   "pipe",
+			Usage:  "Tweet by stdin",
+		},
+	}
 
 	app.Action = commandTweet.Action
 	app.Commands = Commands
