@@ -101,6 +101,10 @@ var commandTimeline = cli.Command{
 			Name:   "with-id",
 			Usage:  "Show timeline with Tweet ID",
 		},
+		cli.BoolFlag{
+			Name:  "stream",
+			Usage: "Show user stream timeline",
+		},
 		cli.StringFlag{
 			Name:  "user",
 			Usage: "Show timeline with screen name",
@@ -334,47 +338,72 @@ func doTimeline(c *cli.Context) {
 	api := doOauth()
 	defer api.Close()
 
-	var cnt string
-	if len(c.Args()) > 0 {
-		_, err := strconv.Atoi(c.Args()[0])
-		if err != nil {
-			panic(err)
-		}
-		cnt = c.Args()[0]
-	}
-
-	v := url.Values{}
-	v.Add("count", cnt)
-
-	var timeline []anaconda.Tweet
-
-	if screenName := c.String("user"); len(screenName) > 0 {
-		v.Add("screen_name", screenName)
-		var err error
-		timeline, err = api.GetUserTimeline(v)
-		if err != nil {
-			panic(err)
-		}
-
+	if c.Bool("stream") {
+		doStream(api)
 	} else {
-		timeline, _ = api.GetHomeTimeline(v)
-	}
+		var cnt string
+		if len(c.Args()) > 0 {
+			_, err := strconv.Atoi(c.Args()[0])
+			if err != nil {
+				panic(err)
+			}
+			cnt = c.Args()[0]
+		}
 
-	for _, tweet := range timeline {
-		user := tweet.User.Name
-		screenName := tweet.User.ScreenName
-		user += "(@" + screenName + ")"
+		v := url.Values{}
+		v.Add("count", cnt)
 
-		blue := ansi.ColorCode("blue")
-		reset := ansi.ColorCode("reset")
+		var timeline []anaconda.Tweet
 
-		if c.Bool("with-id") {
-			fmt.Println(blue, user, ":", reset, tweet.Text, tweet.IdStr)
+		if screenName := c.String("user"); len(screenName) > 0 {
+			v.Add("screen_name", screenName)
+			var err error
+			timeline, err = api.GetUserTimeline(v)
+			if err != nil {
+				panic(err)
+			}
+
 		} else {
-			fmt.Println(blue, user, ":", reset, tweet.Text)
+			timeline, _ = api.GetHomeTimeline(v)
+		}
+
+		for _, tweet := range timeline {
+			user := tweet.User.Name
+			screenName := tweet.User.ScreenName
+			user += "(@" + screenName + ")"
+
+			blue := ansi.ColorCode("blue")
+			reset := ansi.ColorCode("reset")
+
+			if c.Bool("with-id") {
+				fmt.Println(blue, user, ":", reset, tweet.Text, tweet.IdStr)
+			} else {
+				fmt.Println(blue, user, ":", reset, tweet.Text)
+			}
 		}
 	}
 
+}
+
+func doStream(api *anaconda.TwitterApi) {
+	stream := api.UserStream(nil)
+
+	for {
+		select {
+		case item := <-stream.C:
+			switch status := item.(type) {
+			case anaconda.Tweet:
+				user := status.User.Name
+				screenName := status.User.ScreenName
+				user += "(@" + screenName + ")"
+
+				blue := ansi.ColorCode("blue")
+				reset := ansi.ColorCode("reset")
+
+				fmt.Println(blue, user, ":", reset, status.Text)
+			}
+		}
+	}
 }
 
 func doDm(c *cli.Context) {
