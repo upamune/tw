@@ -401,6 +401,7 @@ func doStream(api *anaconda.TwitterApi) {
 				reset := ansi.ColorCode("reset")
 
 				fmt.Println(blue, user, ":", reset, status.Text)
+			default:
 			}
 		}
 	}
