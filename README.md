@@ -2,6 +2,8 @@
 
 ## Description
 
+You can Twitter on CUI.
+
 ## Usage
 
 ```
@@ -21,6 +23,13 @@ To install, use `go get`:
 ```bash
 $ go get -d github.com/upamune/tw
 ```
+
+If you use HomeBrew,
+
+```bash
+brew tap upamune/tw && brew install tw
+```
+
 
 ## Contribution
 
