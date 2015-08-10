@@ -200,10 +200,7 @@ func doRt(c *cli.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		user := tweet.User.Name
-		screenName := tweet.User.ScreenName
-		user += "(@" + screenName + ")"
-		fmt.Println("Retweeted: ", user, tweet.Text)
+		dispTweet(tweet, "Retweeted: ", "blue")
 	} else {
 
 		for i := 0; i < len(c.Args()); i++ {
@@ -213,10 +210,7 @@ func doRt(c *cli.Context) {
 				log.Fatal(err)
 				break
 			}
-			user := tweet.User.Name
-			screenName := tweet.User.ScreenName
-			user += "(@" + screenName + ")"
-			fmt.Println("Retweeted: ", user, tweet.Text)
+			dispTweet(tweet, "Retweeted: ", "blue")
 		}
 	}
 }
@@ -244,10 +238,7 @@ func doFav(c *cli.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		user := tweet.User.Name
-		screenName := tweet.User.ScreenName
-		user += "(@" + screenName + ")"
-		fmt.Println("Favorited: ", user, tweet.Text)
+		dispTweet(tweet, "Favorited: ", "blue")
 	} else {
 		for i := 0; i < len(c.Args()); i++ {
 			tweetID, _ := strconv.ParseInt(c.Args()[i], 10, 64)
@@ -260,10 +251,7 @@ func doFav(c *cli.Context) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			user := tweet.User.Name
-			screenName := tweet.User.ScreenName
-			user += "(@" + screenName + ")"
-			fmt.Println("Favorited: ", user, tweet.Text)
+			dispTweet(tweet, "Favorited: ", "blue")
 		}
 	}
 }
@@ -323,14 +311,7 @@ func doSearch(c *cli.Context) {
 	tweets := searchRes.Statuses
 
 	for _, tweet := range tweets {
-		user := tweet.User.Name
-		screenName := tweet.User.ScreenName
-		user += "(@" + screenName + ")"
-
-		blue := ansi.ColorCode("blue")
-		reset := ansi.ColorCode("reset")
-
-		fmt.Println(blue, user, ":", reset, tweet.Text, tweet.Id)
+		dispTweet(tweet, "", "blue")
 	}
 }
 
@@ -449,4 +430,18 @@ func doReply(c *cli.Context) {
 		from := fromUser.Name + "(" + fromUser.ScreenName + ")"
 		fmt.Println(red, from, reset, ":", mention.Text)
 	}
+}
+
+func dispTweet(tweet anaconda.Tweet, text string, color string) (err error) {
+
+	user := tweet.User.Name
+	screenName := tweet.User.ScreenName
+	user += "(@" + screenName + ")"
+
+	colorCode := ansi.ColorCode(color)
+	reset := ansi.ColorCode("reset")
+
+	fmt.Println(text, colorCode, user, ":", reset, tweet.Text, tweet.Id)
+
+	return
 }
